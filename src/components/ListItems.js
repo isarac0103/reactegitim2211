@@ -1,5 +1,7 @@
 import React from 'react'
 import ListItem from './ListItem'
+import axios from 'axios'
+import StudentRow from './StudentRow'
 
 class ListItems extends React.Component {
 
@@ -10,71 +12,117 @@ class ListItems extends React.Component {
         this.onRemovePressed = this.onRemovePressed.bind(this)
 
         this.state = {
-            items: []
+            items: [],
+            students: []
         }
     }
 
-    onRemovePressed (index) {
+    componentDidMount () {
 
-        this.setState((prevState) => {
+        axios.get('https://stu01.herokuapp.com/api/student')
+        .then((response) => {
+            console.log(response.data)
 
-            const items = prevState.items
-            const deletedItem = items.splice(index, 1)
-            
-            return {
-                items
-            }
+            const students = response.data.list
+            this.setState(() => {
+                return {
+                    students
+                }
+            })
         })
+        .catch((error) => {
 
-        console.log(`will remove item at index ${index}`)
+        })
+    }
+
+    onRemovePressed (_id) {
+
+        axios.delete(`https://stu01.herokuapp.com/api/student/${_id}`)
+        .then((response) => {
+
+            this.setState((prevState) => {
+
+                const students = prevState.students.filter((std) => {
+                    return std._id != _id
+                })
+
+                return {
+                    students
+                }
+            })
+        })
+        .catch((error) => {
+
+        })
     }
 
     onFormSubmit (e) {
 
         e.preventDefault()
 
-        const newValue = e.target.elements.newItem.value
+        const firstName = e.target.elements.firstName.value
+        const lastName = e.target.elements.lastName.value
+        const classroom = e.target.elements.classroom.value
 
-        if (newValue.length > 0) {
+        axios.post('https://stu01.herokuapp.com/api/student',
+            {
+                firstName,
+                lastName,
+                classroom
+            }
+        )
+        .then((response) => {
+            console.log(response.data)
 
-            e.target.elements.newItem.value = ""
-        
+            const newStudent = response.data.data[0]
             this.setState((prevState) => {
                 return {
-                    items: [...prevState.items, newValue]
+                    students: [...prevState.students, newStudent]
                 }
             })
-        }
+
+        })
+        .catch((error) => {
+
+        })
     }
 
     render () {
 
-        const {items} = this.state
+        const {students} = this.state
 
         return (
             <div>
             {
-                items.length > 0 &&
+                students.length > 0 &&
                     <div>
                     <h2>Seçenekler</h2>
+                    <table>
+                        <tbody>
                     {
-                        items.map((item,index) => {
+                        students.map((student,index) => {
                             return (
-
-                                <ListItem
+                                <StudentRow 
                                     key={index}
-                                    index={index}
-                                    item={item}
+                                    student={student}
                                     onRemovePressed={this.onRemovePressed}
-                                 />
+                                />
                             )
                         })
                     }
+                    </tbody>
+                    </table>
                 </div>
             }
                 <div>
                     <form onSubmit={this.onFormSubmit}>
-                        <input type="text" name="newItem" placeholder="Yeni Satır Girin" />
+                        <input type="text" name="firstName" placeholder="Ad Girin" /><br />
+                        <input type="text" name="lastName" placeholder="Soyad Girin" /><br />
+                        <select name="classroom">
+                            <option value="civcivler">civcivler</option>
+                            <option value="arılar">arılar</option>
+                            <option value="kelebekler">kelebekler</option>
+                        </select>
                         <button>Kaydet</button>
                     </form>
                 </div>

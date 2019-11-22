@@ -1,6 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom'
-import Dashboard from './components/Dashboard'
+import Router from './components/Router'
 
 const appRoot = document.getElementById('app')
-ReactDOM.render(<Dashboard />, appRoot) 
+ReactDOM.render(<Router />, appRoot) 
